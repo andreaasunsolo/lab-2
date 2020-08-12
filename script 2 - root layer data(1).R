@@ -265,3 +265,5 @@ gather(h1dat , key = "layer.harvest",  value="x", r10.h1:r50.h1)
 reshape(rootdata  , 
 	varying = c("r10.h1", "r20.h1", "r30.h1", "r40.h1", "r50.h1", "r10.h2", "r50.h2", "r20.h2", "r30.h2", "r40.h2") ,
 	direction='long')
+
+usethis::use_github()
