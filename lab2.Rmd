@@ -35,5 +35,6 @@ x
 y<- c("shark","snapper", "turtle", "star", "jacks")
 y
 ```
-#check why you can't create ypur foo.R files and why your rmd file does not show in the browser!!!!   rmarkdown::render("foo.R")
+#check why you can't create your foo.R files 
+rmarkdown::render("foo.R")
 
