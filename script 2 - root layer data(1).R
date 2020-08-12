@@ -1,0 +1,267 @@
+####################################################################
+####################################################################
+## root layer experiment data
+
+## first open the file "root layer data.csv" in Excel and have a look at the data
+## note the treatments and the levels of each treatments and the replicates at each level combination
+## also note the measurements on root lengths within five soil levels at each of two harvests
+
+## now read the data into R
+setwd("~/Documents/Master UWA/BIG Data/lab 2")
+rootdata <- read.csv("root layer data(1).csv")
+
+## check the data has read in correctly using 'head' and/or looking at the whole data frame
+
+head(rootdata)
+str(rootdata)
+
+## check how many replicates of each treatment?
+
+table(rootdata$P,rootdata$W)
+
+#      hiW  loW MedW
+#hiP    6   3    6
+#loP    3   6    6
+#medP   6   6    3
+## notice that the design is NOT fully balanced
+
+## how many replicates of each P level? 15
+table(rootdata$P)
+## although we have the same total number of replicates for each P level
+
+## how many replicates of each W level? 15
+
+table(rootdata$W)
+
+## plot the root lengths within the first layer at the first harvest, by treatment
+boxplot(r10.h1~P*W,data=rootdata)
+
+## notice that the order of levels isnt very useful in the plot - lets fix that
+rootdata$P <- factor(rootdata$P,levels=c('loP','medP','hiP'))
+
+## now put the order of the water levels in a better order and do the boxplot again
+rootdata$W <- factor(rootdata$W,levels=c('loW','MedW','hiW'))
+
+## now calculate the medians for each P level
+tapply(rootdata$r10.h1,rootdata$P,median)
+tapply(rootdata$r20.h1,rootdata$P,median)
+tapply(rootdata$r30.h1,rootdata$P,median)
+tapply(rootdata$r40.h1,rootdata$P,median)
+tapply(rootdata$r50.h1,rootdata$P,median)
+## do they match this boxplot?
+boxplot(r10.h1~P,data=rootdata)
+boxplot(r20.h1~P,data=rootdata)
+boxplot(r30.h1~P,data=rootdata)
+boxplot(r40.h1~P,data=rootdata)
+boxplot(r50.h1~P,data=rootdata)
+
+## now calculate the medians for each treatment
+tapply(rootdata$r10.h1,interaction(rootdata$P,rootdata$W),median)
+tapply(rootdata$r20.h1,interaction(rootdata$P,rootdata$W),median)
+tapply(rootdata$r30.h1,interaction(rootdata$P,rootdata$W),median)
+tapply(rootdata$r40.h1,interaction(rootdata$P,rootdata$W),median)
+tapply(rootdata$r50.h1,interaction(rootdata$P,rootdata$W),median)
+
+## do they match the previous boxplot?
+#no, but the previous boxplot was not calculating the interaction b/P and W
+
+## now calculate the means of each treatment
+
+tapply(rootdata$r10.h1,interaction(rootdata$P,rootdata$W),mean)
+tapply(rootdata$r20.h1,interaction(rootdata$P,rootdata$W),mean)
+tapply(rootdata$r30.h1,interaction(rootdata$P,rootdata$W),mean)
+tapply(rootdata$r40.h1,interaction(rootdata$P,rootdata$W),mean)
+tapply(rootdata$r50.h1,interaction(rootdata$P,rootdata$W),mean)
+
+## now calculate the variances of each treatment
+
+tapply(rootdata$r10.h1,interaction(rootdata$P,rootdata$W),var)
+tapply(rootdata$r20.h1,interaction(rootdata$P,rootdata$W),var)
+tapply(rootdata$r30.h1,interaction(rootdata$P,rootdata$W),var)
+tapply(rootdata$r40.h1,interaction(rootdata$P,rootdata$W),var)
+tapply(rootdata$r50.h1,interaction(rootdata$P,rootdata$W),var)
+
+## does it look like equality of variance is a valid assumption?
+
+#particularly for the r.2 and below root levels, yes.
+
+## at this point we might dive in and do some anovas and look for significant differences
+## but instead we should first do all the plots and look at the means to see what differences we would think might be significant
+
+## we can use a loop to quickly generate plots for each root layer at each harvest
+## we will loop through the columns with root length measures ie columns 4 to 13
+for (ci in 4:13){
+	boxplot(rootdata[,ci]~P*W,data=rootdata,main=names(rootdata)[ci])
+}
+
+## hmmm, too fast! maybe you didnt even notice all the plots flying by...
+## need to slow that down
+par(ask=TRUE)     ## this means you will be asked to confirm each plot change by clicking on the plot
+for (ci in 4:13){
+	boxplot(rootdata[,ci]~P*W,data=rootdata,main=names(rootdata)[ci])
+}
+par(ask=FALSE)
+
+## or save each one to a file
+pdf('rootplots.pdf')    ## this opens a pdf file for the plots produced 
+for (ci in 4:13){
+	boxplot(rootdata[,ci]~P*W,data=rootdata,main=names(rootdata)[ci])
+}
+dev.off()		## this finalises the pdf file
+
+## open up the pdf file that has been produced 
+## which variables look like they may have significant differences?
+
+
+## and to calculate the medians of each measured variable for each treatement
+## we could use 'tapply' for each variable seperately, as above
+## but this is quicker!
+aggregate(rootdata[,4:13],by=list(rootdata$P,rootdata$W),median)
+
+## and if you wanted to clean it up and save it to csv 
+## for opening in Excel and pasting into a paper in word...
+mediantable <- aggregate(rootdata[4:13],by=list(rootdata$P,rootdata$W),median)
+names(mediantable)[1:2] <- c('P','Water')
+write.csv(mediantable,'mediantable.csv')
+
+## now try doing the same for a table of means
+
+meantable <- aggregate(rootdata[4:13],by=list(rootdata$P,rootdata$W),mean)
+names(meantable)[1:2] <- c('P','Water')
+write.csv(meantable,'meantable.csv')
+
+## or as an extra challenge you could try doing a table of standard errors
+
+SE<- function(x) sd(x)/sqrt(length(x))
+
+SEtable <- aggregate(rootdata[4:13],by=list(rootdata$P,rootdata$W),SE)
+names(SEtable)[1:2] <- c('P','Water')
+write.csv(SEtable,'stdetable.csv')
+
+SEtable
+
+## as a serious challenge a few of you might want to try building a table of means with standard errors 
+## in parentheses after each mean using R script only
+## as a hint, look what this line produces
+paste(mediantable[,3]," (",mediantable[,4],")",sep='')
+## and think about loops or sapply
+
+#figure out how to do it!!
+#sapply(Function(x)(paste(meantable[,CI]," (",SEtable[,CI],")",sep='')))
+
+## now as well as root length per layer you are probably interested in total root length
+## to calculate total root length at the first harvest you can use 'apply'
+apply(rootdata[,4:8],1,sum)
+## or rowSums
+rowSums(rootdata[,4:8])
+rootdata$total.h1 <- rowSums(rootdata[,4:8])
+boxplot(total.h1~P*W,data=rootdata)
+
+## now calculate and plot the total root lengths for the second harvest
+
+rowSums(rootdata[,9:13])
+
+
+## add this as a new column to the data frame (with the name 'total.h2')
+
+rootdata$total.h2 <- rowSums(rootdata[,9:13])
+
+## note that some of the code below assumes that you have added this extra column
+## if you get errors, it may be because you haven't....
+
+## and the proportions within each layer
+rootdata[,4:8]/rootdata$total.h1
+
+## and add to the dataframe
+rootdata <- cbind(rootdata, rootdata[,4:8]/rootdata$total.h1)
+rootdata
+
+## and change the column names so they are different to the others
+
+names(rootdata)[16:20] <- paste('P',names(rootdata)[16:20],sep='')
+rootdata
+
+## now add the proportions within each layer for the second harvest?
+
+rootdata <- cbind(rootdata, rootdata[,9:13]/rootdata$total.h2)
+rootdata
+names(rootdata)[21:25] <- paste('P',names(rootdata)[21:25],sep='')
+rootdata
+
+## at this point you could go back and build, clean and save the table of means 
+## including all this new information as well
+
+meantable <- aggregate(rootdata[4:25],by=list(rootdata$P,rootdata$W),mean)
+names(meantable)[1:2] <- c('P','Water')
+write.csv(meantable,'meantable.csv')
+
+## as another serious challenge you might like to look carefully at the following line of code 
+## and work out what it produces
+sapply(4:25, function(i) { anova(lm(rootdata[,i]~P*W,data=rootdata))[["Pr(>F)"]][1:3] })
+
+#this is basically saying create a function for columns 4 to 25. the function is an anova of the data rootdata including the interaction of P (phosphorus) and W (water), the Pr(>F) is basically the p-value of the first three rows, so the p valued for P, W and P*W.
+
+
+## we'd probably want to clean it up a bit before we saved it...
+restab <- data.frame(sapply(4:25, function(i) { anova(lm(rootdata[,i]~P*W,data=rootdata))[["Pr(>F)"]][1:3] }))
+restab <- round(restab ,4)
+names(restab) <- names(rootdata)[4:20]
+row.names(restab) <- c('P','W','P:W')
+restab
+
+##########################################################
+## this course generally uses base R functions
+## an alternative world of data manipulation functions can be find in the 'tidyverse'
+## this shows a few examples of what it can do
+
+library(tidyverse)
+
+rootdata <- read.csv("root layer data(1).csv") 
+
+
+## in each of the following, the first option is the tidyverse option
+## and the others are equivalent base R option(s)
+
+filter(rootdata ,  P == "hiP" ,  W=="hiW")  	
+subset(rootdata ,  P == "hiP" &  W=="hiW")	
+
+arrange(rootdata , desc(r10.h1))  				
+rootdata[order(rootdata$r10.h1,decreasing=TRUE),] 
+
+dplyr::summarise(group_by(rootdata,P,W) ,n=n())
+with(rootdata , table(list(P,W)))
+with(rootdata , tapply(P,list(P,W),length))
+with(rootdata , tapply(P,interaction(P,W),length))
+
+summarise(group_by(rootdata,P,W) ,mean_r10.h1=mean(r10.h1))
+with(rootdata , tapply(r10.h1,interaction(W,P),mean))
+with(rootdata , aggregate(r10.h1,list(W,P),mean))
+
+select(rootdata, r10.h1)
+rootdata[["r10.h1"]] 
+
+dplyr::rename(rootdata, r10h1 = r10.h1)
+names(rootdata)[4] = "r10h1"
+names(rootdata)[names(rootdata)=="r10.h1"] = "r10h1"
+rootdata
+
+## now change it back
+rootdata = rename(rootdata, r10.h1 = r10h1)
+
+mutate(rootdata,
+  gain_r10 = r10.h2 - r10.h1,
+  gain_r20 = r20.h2 - r20.h1,
+)
+rootdata$gain_r10 = rootdata$r10.h2 - rootdata$r10.h1
+rootdata$gain_r20 = rootdata$r20.h2 - rootdata$r20.h1
+rootdata
+
+pull(rootdata, r10.h1)
+rootdata$r10.h1
+
+rootdata <- read.csv("root layer data.csv")
+h1dat = select(rootdata , P ,   W ,r10.h1, r20.h1, r30.h1, r40.h1, r50.h1 )
+gather(h1dat , key = "layer.harvest",  value="x", r10.h1:r50.h1)
+reshape(rootdata  , 
+	varying = c("r10.h1", "r20.h1", "r30.h1", "r40.h1", "r50.h1", "r10.h2", "r50.h2", "r20.h2", "r30.h2", "r40.h2") ,
+	direction='long')
