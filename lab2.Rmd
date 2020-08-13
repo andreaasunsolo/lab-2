@@ -36,5 +36,5 @@ y<- c("shark","snapper", "turtle", "star", "jacks")
 y
 ```
 #check why you can't create your foo.R files 
-rmarkdown::render("foo.R")
+rmarkdown::render("script 2 - root layer data(1).R")
 
